@@ -12,7 +12,10 @@ class AnimalRepository
      */
     public function allOrdered(): Collection
     {
-        return Animal::query()->orderByDesc('created_at')->get();
+        return Animal::query()
+            ->with('animalState')
+            ->orderByDesc('created_at')
+            ->get();
     }
 
     public function create(array $attributes): Animal
@@ -22,11 +25,11 @@ class AnimalRepository
 
     public function update(Animal $animal, array $attributes): bool
     {
-        return false;
+        return $animal->update($attributes);
     }
 
     public function delete(Animal $animal): bool
     {
-        return false;
+        return $animal->delete();
     }
 }
