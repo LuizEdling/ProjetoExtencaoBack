@@ -7,6 +7,8 @@ use App\Models\AnimalState;
 use App\Repositories\AnimalRepository;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Adotante;
 
 class AnimalController extends Controller
 {
@@ -102,5 +104,38 @@ class AnimalController extends Controller
         $this->animals->delete($animal);
 
         return response()->noContent();
+    }
+
+    public function generateContratoAdocao(Request $request, string $id)
+    {
+        try {
+            // Carrega o animal junto com os dados do adotante cadastrado
+            $animal = Animal::findOrFail($id);
+            $adotante = Adotante::findOrFail($id);
+            $animal->created_at_formatado = $animal->created_at->format('d/m/Y');
+
+            $data = [
+                'animal' => $animal,
+                'adotante' => $adotante ?? null, 
+            ];
+        
+            $pdf = Pdf::setOptions(['isRemoteEnabled' => true])
+                ->loadView('contrato', $data)
+                ->setPaper('A4', 'portrait');
+
+            return $pdf->stream("contrato_{$id}.pdf");
+        } catch (\Exception $e) {
+            error_log('=== ERRO CAPTURADO ===');
+            error_log('Mensagem: ' . $e->getMessage());
+
+            return response()->json([
+                'erro' => 'Erro inesperado',
+                'tipo' => get_class($e),
+                'mensagem' => $e->getMessage(),
+                'linha' => $e->getLine(),
+                'arquivo' => $e->getFile()
+            ], 500);
+        }
+
     }
 }
