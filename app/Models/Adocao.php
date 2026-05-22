@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Adocao extends Model
 {
+    protected $table = 'adocoes';
+
     protected $fillable = [
         'animal_id',
         'adotante_id',

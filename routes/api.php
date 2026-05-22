@@ -26,4 +26,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::apiResource('adotantes', AdotanteController::class)->except(['show']);
     Route::apiResource('adocoes', AdocaoController::class)->except(['show']);
     Route::apiResource('lembretes', LembreteController::class)->except(['show']);
+
+    //Geração de PDFs
+    Route::get('/contrato/{id}', [AnimalController::class, 'generateContratoAdocao']);
+    //Route::get('/ficha/{id}/pdf', [AnimalController::class, 'generateFichaPdf']);
 });
+

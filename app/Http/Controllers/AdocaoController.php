@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Adocao;
 use App\Repositories\AdocaoRepository;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdocaoController extends Controller
 {
