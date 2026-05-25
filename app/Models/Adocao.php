@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Adocao extends Model
 {
@@ -31,6 +32,14 @@ class Adocao extends Model
     public function adotante(): BelongsTo
     {
         return $this->belongsTo(Adotante::class);
+    }
+
+    /**
+     * @return HasOne<Contratacao, $this>
+     */
+    public function contratacao(): HasOne
+    {
+        return $this->hasOne(Contratacao::class);
     }
 
     /**

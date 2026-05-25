@@ -27,6 +27,11 @@ class AdocaoPolicy
         return true;
     }
 
+    public function generateContrato(?User $user, Adocao $adocao): bool
+    {
+        return true;
+    }
+
     public function delete(?User $user, Adocao $adocao): bool
     {
         return true;

@@ -6,16 +6,17 @@ use App\Models\Adocao;
 use App\Models\Animal;
 use App\Models\AnimalState;
 use App\Repositories\AdocaoRepository;
+use App\Services\ContratoAdocaoService;
 use App\Services\PainelQueryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdocaoController extends Controller
 {
     public function __construct(
         protected AdocaoRepository $adocoes,
+        protected ContratoAdocaoService $contratoAdocao,
     ) {}
 
     public function index()
@@ -23,6 +24,24 @@ class AdocaoController extends Controller
         $this->authorize('viewAny', Adocao::class);
 
         return response()->json($this->adocoes->allOrdered());
+    }
+
+    public function gerarContrato(Adocao $adocao)
+    {
+        $this->authorize('generateContrato', $adocao);
+
+        return $this->contratoAdocao->streamPdf($adocao);
+    }
+
+    /**
+     * Rota legada: `{id}` é o ID do registro em `adocao` (não do animal).
+     */
+    public function gerarContratoLegado(string $id)
+    {
+        $adocao = Adocao::query()->with(['animal', 'adotante'])->findOrFail($id);
+        $this->authorize('generateContrato', $adocao);
+
+        return $this->contratoAdocao->streamPdf($adocao);
     }
 
     public function store(Request $request)
