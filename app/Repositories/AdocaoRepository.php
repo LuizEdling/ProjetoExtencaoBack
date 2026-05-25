@@ -13,7 +13,7 @@ class AdocaoRepository
     public function allOrdered(): Collection
     {
         return Adocao::query()
-            ->with(['animal', 'adotante'])
+            ->with(['animal.animalState', 'adotante'])
             ->orderByDesc('created_at')
             ->get();
     }

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Adocao extends Model
 {
+    /** Tabela singular: o inflector pluraliza "Adocao" como "adocaos", que é inválido. */
+    protected $table = 'adocao';
+
     protected $fillable = [
         'animal_id',
         'adotante_id',
