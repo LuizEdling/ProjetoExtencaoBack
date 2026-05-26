@@ -6,8 +6,10 @@ use App\Http\Controllers\AnimalCatalogController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\AnimalStateController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GastoController;
 use App\Http\Controllers\LembreteController;
 use App\Http\Controllers\PainelController;
+use App\Http\Controllers\RelatorioController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
@@ -22,13 +24,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::get('painel', [PainelController::class, 'index']);
 
+    Route::get('relatorios/dashboard', [RelatorioController::class, 'dashboard']);
+    Route::post('relatorios/export', [RelatorioController::class, 'export']);
+
     Route::apiResource('animals', AnimalController::class)->except(['show']);
     Route::apiResource('adotantes', AdotanteController::class)->except(['show']);
+    Route::post('adocoes/{adocao}/contrato', [AdocaoController::class, 'gerarContrato']);
     Route::apiResource('adocoes', AdocaoController::class)->except(['show']);
     Route::apiResource('lembretes', LembreteController::class)->except(['show']);
+    Route::apiResource('gastos', GastoController::class)->except(['show']);
 
-    //Geração de PDFs
-    Route::get('/contrato/{id}', [AnimalController::class, 'generateContratoAdocao']);
+    // Geração de PDF do contrato; `{id}` = ID da adoção (`adocao.id`)
+    Route::get('/contrato/{id}', [AdocaoController::class, 'gerarContratoLegado']);
     //Route::get('/ficha/{id}/pdf', [AnimalController::class, 'generateFichaPdf']);
 });
 

@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Animal;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 class AnimalRepository
@@ -16,6 +17,29 @@ class AnimalRepository
             ->with('animalState')
             ->orderByDesc('created_at')
             ->get();
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, Animal>
+     */
+    public function paginatedOrdered(int $perPage, ?string $search = null): LengthAwarePaginator
+    {
+        $query = Animal::query()
+            ->with('animalState')
+            ->orderByDesc('created_at');
+
+        if ($search !== null && $search !== '') {
+            $escaped = addcslashes($search, '%_\\');
+            $term = '%'.$escaped.'%';
+            $query->where(function ($q) use ($term) {
+                $q->where('nome', 'like', $term)
+                    ->orWhere('raca', 'like', $term)
+                    ->orWhere('especie', 'like', $term)
+                    ->orWhere('microchip', 'like', $term);
+            });
+        }
+
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function create(array $attributes): Animal

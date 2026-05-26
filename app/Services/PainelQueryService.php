@@ -60,8 +60,8 @@ class PainelQueryService
         $hoje = $now->copy()->startOfDay();
         $ontem = $hoje->copy()->subDay();
 
-        $cadastradosHoje = Animal::query()->whereDate('created_at', $hoje)->count();
-        $cadastradosOntem = Animal::query()->whereDate('created_at', $ontem)->count();
+        $cadastradosHoje = Animal::query()->whereDate('data_ficha', $hoje)->count();
+        $cadastradosOntem = Animal::query()->whereDate('data_ficha', $ontem)->count();
         $legendaCadastrados = $cadastradosOntem > 0
             ? sprintf('%d cadastrados ontem', $cadastradosOntem)
             : ($cadastradosHoje > 0 ? 'Primeiro cadastro do dia' : 'Nenhum cadastro hoje');
@@ -195,7 +195,7 @@ class PainelQueryService
         $hoje = $now->copy()->startOfDay();
 
         $rows = Animal::query()
-            ->whereDate('created_at', $hoje)
+            ->whereDate('data_ficha', $hoje)
             ->orderByDesc('created_at')
             ->get();
 

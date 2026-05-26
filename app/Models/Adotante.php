@@ -10,5 +10,10 @@ class Adotante extends Model
         'nome',
         'cpf',
         'telefone',
+        'rg',
+        'endereco',
+        'bairro',
+        'cidade',
+        'uf',
     ];
 }

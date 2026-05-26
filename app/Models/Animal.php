@@ -13,6 +13,7 @@ class Animal extends Model
     protected $fillable = [
         'nome',
         'raca',
+        'microchip',
         'data_ficha',
         'especie',
         'sexo',
@@ -21,6 +22,9 @@ class Animal extends Model
         'cor',
         'data_entrada',
         'observacoes',
+        'vermifugado',
+        'vacinado',
+        'castrado',
         'animal_state_id',
         'animal_state_changed_at',
     ];
@@ -43,6 +47,9 @@ class Animal extends Model
             'data_entrada' => 'date',
             'idade' => 'integer',
             'peso' => 'float',
+            'vermifugado' => 'boolean',
+            'vacinado' => 'boolean',
+            'castrado' => 'boolean',
             'animal_state_changed_at' => 'datetime',
         ];
     }

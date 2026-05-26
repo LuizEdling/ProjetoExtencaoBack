@@ -77,7 +77,7 @@
         @endif
     </div>
     <div class="linha-dado">
-        <strong>Contato:</strong> {{ $adotante->contato ?? '____________________' }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <strong>Contato:</strong> {{ $adotante->contato ?? $adotante->telefone ?? '____________________' }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
     </div>
 
     <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
@@ -97,8 +97,8 @@
         </div>
         <div class="checkbox-item">
             <strong>Castrado:</strong> 
-            ( {!! $animal->castrado === '1' ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Sim &nbsp;&nbsp; 
-            ( {!! $animal->castrado === '0' ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Não
+            ( {!! $animal->castrado ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Sim &nbsp;&nbsp; 
+            ( {!! ! $animal->castrado ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Não
         </div>
         <div class="checkbox-item">
             <strong>Categoria:</strong> 
@@ -107,13 +107,13 @@
         </div>
         <div class="checkbox-item">
             <strong>Vermifugado:</strong> 
-            ( {!! $animal->vermifugado === '1' ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Sim &nbsp;&nbsp; 
-            ( {!! $animal->vermifugado === '0' ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Não
+            ( {!! $animal->vermifugado ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Sim &nbsp;&nbsp; 
+            ( {!! ! $animal->vermifugado ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Não
         </div>
         <div class="checkbox-item">
             <strong>Vacinado:</strong> 
-            ( {!! $animal->vacinado === '1' ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Sim &nbsp;&nbsp; 
-            ( {!! $animal->vacinado === '0' ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Não
+            ( {!! $animal->vacinado ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Sim &nbsp;&nbsp; 
+            ( {!! ! $animal->vacinado ? 'X' : '<span style="color: #fff;">X</span>' !!} ) Não
         </div>
     </div>
 

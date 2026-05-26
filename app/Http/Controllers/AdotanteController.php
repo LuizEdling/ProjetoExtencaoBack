@@ -33,7 +33,14 @@ class AdotanteController extends Controller
             'nome' => ['required', 'string', 'max:255'],
             'cpf' => ['required', 'string', 'max:14', 'unique:adotantes,cpf'],
             'telefone' => ['required', 'string', 'max:20'],
+            'rg' => ['required', 'string', 'max:20'],
+            'endereco' => ['required', 'string', 'max:255'],
+            'bairro' => ['required', 'string', 'max:120'],
+            'cidade' => ['required', 'string', 'max:120'],
+            'uf' => ['required', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
         ]);
+
+        $validated['uf'] = strtoupper($validated['uf']);
 
         $adotante = $this->adotantes->create($validated);
 
@@ -52,7 +59,14 @@ class AdotanteController extends Controller
             'nome' => ['required', 'string', 'max:255'],
             'cpf' => ['required', 'string', 'max:14', 'unique:adotantes,cpf,' . $adotante->id],
             'telefone' => ['required', 'string', 'max:20'],
+            'rg' => ['required', 'string', 'max:20'],
+            'endereco' => ['required', 'string', 'max:255'],
+            'bairro' => ['required', 'string', 'max:120'],
+            'cidade' => ['required', 'string', 'max:120'],
+            'uf' => ['required', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
         ]);
+
+        $validated['uf'] = strtoupper($validated['uf']);
 
         $this->adotantes->update($adotante, $validated);
 
