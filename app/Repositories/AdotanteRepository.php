@@ -19,7 +19,10 @@ class AdotanteRepository
         }
 
         if (!empty($filters['cpf'])) {
-            $query->where('cpf', 'like', '%' . $filters['cpf'] . '%');
+            $digits = preg_replace('/\D+/', '', (string) $filters['cpf']);
+            if ($digits !== '') {
+                $query->where('cpf', 'like', '%' . $digits . '%');
+            }
         }
 
         return $query

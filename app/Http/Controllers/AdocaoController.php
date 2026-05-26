@@ -19,11 +19,18 @@ class AdocaoController extends Controller
         protected ContratoAdocaoService $contratoAdocao,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Adocao::class);
 
-        return response()->json($this->adocoes->allOrdered());
+        $request->validate([
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+        ]);
+
+        $perPage = min(50, max(1, (int) $request->input('per_page', 10)));
+
+        return response()->json($this->adocoes->paginatedOrdered($perPage));
     }
 
     public function gerarContrato(Adocao $adocao)

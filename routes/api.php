@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\LembreteController;
 use App\Http\Controllers\PainelController;
+use App\Http\Controllers\RelatorioController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
@@ -22,6 +23,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('animal-states', [AnimalStateController::class, 'index']);
 
     Route::get('painel', [PainelController::class, 'index']);
+
+    Route::get('relatorios/dashboard', [RelatorioController::class, 'dashboard']);
+    Route::post('relatorios/export', [RelatorioController::class, 'export']);
 
     Route::apiResource('animals', AnimalController::class)->except(['show']);
     Route::apiResource('adotantes', AdotanteController::class)->except(['show']);

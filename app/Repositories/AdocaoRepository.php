@@ -18,6 +18,15 @@ class AdocaoRepository
             ->get();
     }
 
+    public function paginatedOrdered(int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return Adocao::query()
+            ->with(['animal.animalState', 'adotante', 'contratacao'])
+            ->orderByDesc('created_at')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
     public function create(array $attributes): Adocao
     {
         return Adocao::create($attributes);
