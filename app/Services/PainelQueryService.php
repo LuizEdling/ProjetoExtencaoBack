@@ -33,11 +33,11 @@ class PainelQueryService
      *         estado_alterado_em: string|null,
      *         data_entrada: string
      *     }>,
-     *     cadastros_hoje: list<array{
+     *     cadastros_mes: list<array{
      *         id: string,
      *         nome: string,
      *         tipo_raca: string,
-     *         horario: string
+     *         data: string
      *     }>
      * }
      */
@@ -48,7 +48,7 @@ class PainelQueryService
         return [
             'resumos' => $this->buildResumos($now),
             'fila_atendimento' => $this->buildFilaAtendimento(),
-            'cadastros_hoje' => $this->buildCadastrosHoje($now),
+            'cadastros_mes' => $this->buildCadastrosMes($now),
         ];
     }
 
@@ -57,25 +57,25 @@ class PainelQueryService
      */
     private function buildResumos(Carbon $now): array
     {
-        $hoje = $now->copy()->startOfDay();
-        $ontem = $hoje->copy()->subDay();
+        $inicioMes = $now->copy()->startOfMonth();
+        $fimMes = $now->copy()->endOfMonth();
+        $inicioMesAnterior = $now->copy()->subMonthNoOverflow()->startOfMonth();
+        $fimMesAnterior = $now->copy()->subMonthNoOverflow()->endOfMonth();
 
-        $cadastradosHoje = Animal::query()->whereDate('data_ficha', $hoje)->count();
-        $cadastradosOntem = Animal::query()->whereDate('data_ficha', $ontem)->count();
-        $legendaCadastrados = $cadastradosOntem > 0
-            ? sprintf('%d cadastrados ontem', $cadastradosOntem)
-            : ($cadastradosHoje > 0 ? 'Primeiro cadastro do dia' : 'Nenhum cadastro hoje');
+        $cadastradosMes = $this->countCadastrosInRange($inicioMes, $fimMes);
+        $cadastradosMesAnterior = $this->countCadastrosInRange($inicioMesAnterior, $fimMesAnterior);
+        if ($cadastradosMesAnterior > 0) {
+            $delta = round((($cadastradosMes - $cadastradosMesAnterior) / $cadastradosMesAnterior) * 100);
+            $legendaCadastrados = sprintf('%+d%% vs mês passado', $delta);
+        } else {
+            $legendaCadastrados = $cadastradosMes > 0 ? 'Primeiros cadastros no período' : 'Nenhum cadastro esse mês';
+        }
 
         $aguardando = $this->countAnimalsInState(self::STATE_ESPERANDO_CONSULTA);
         $emCirurgia = $this->countAnimalsInState(self::STATE_EM_CIRURGIA);
         $legendaAguardando = $emCirurgia > 0
             ? sprintf('%d em cirurgia', $emCirurgia)
             : 'Nenhum em cirurgia no momento';
-
-        $inicioMes = $now->copy()->startOfMonth();
-        $fimMes = $now->copy()->endOfMonth();
-        $inicioMesAnterior = $now->copy()->subMonthNoOverflow()->startOfMonth();
-        $fimMesAnterior = $now->copy()->subMonthNoOverflow()->endOfMonth();
 
         $adocoesMes = $this->countAdoptionsInRange($inicioMes, $fimMes);
         $adocoesMesAnterior = $this->countAdoptionsInRange($inicioMesAnterior, $fimMesAnterior);
@@ -102,11 +102,11 @@ class PainelQueryService
 
         return [
             [
-                'id' => 'cadastrados_hoje',
-                'titulo' => 'Cadastrados Hoje',
-                'valor' => (string) $cadastradosHoje,
+                'id' => 'cadastrados_mes',
+                'titulo' => 'Cadastrados esse Mês',
+                'valor' => (string) $cadastradosMes,
                 'legenda' => $legendaCadastrados,
-                'legenda_variant' => $cadastradosHoje > 0 ? 'success' : 'neutral',
+                'legenda_variant' => $cadastradosMes > 0 ? 'success' : 'neutral',
                 'icon' => 'paw',
             ],
             [
@@ -144,6 +144,13 @@ class PainelQueryService
         }
 
         return Animal::query()->where('animal_state_id', $id)->count();
+    }
+
+    private function countCadastrosInRange(Carbon $start, Carbon $end): int
+    {
+        return Animal::query()
+            ->whereBetween('data_ficha', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
+            ->count();
     }
 
     private function countAdoptionsInRange(Carbon $start, Carbon $end): int
@@ -188,25 +195,25 @@ class PainelQueryService
     }
 
     /**
-     * @return list<array{id: string, nome: string, tipo_raca: string, horario: string}>
+     * @return list<array{id: string, nome: string, tipo_raca: string, data: string}>
      */
-    private function buildCadastrosHoje(Carbon $now): array
+    private function buildCadastrosMes(Carbon $now): array
     {
-        $hoje = $now->copy()->startOfDay();
+        $inicioMes = $now->copy()->startOfMonth();
+        $fimMes = $now->copy()->endOfMonth();
 
         $rows = Animal::query()
-            ->whereDate('data_ficha', $hoje)
+            ->whereBetween('data_ficha', [$inicioMes->copy()->startOfDay(), $fimMes->copy()->endOfDay()])
+            ->orderByDesc('data_ficha')
             ->orderByDesc('created_at')
             ->get();
 
-        return $rows->map(function (Animal $animal) use ($now) {
-            $created = $animal->created_at ?? $now;
-
+        return $rows->map(function (Animal $animal) {
             return [
                 'id' => (string) $animal->id,
                 'nome' => $animal->nome,
                 'tipo_raca' => sprintf('%s — %s', $animal->especie, $animal->raca),
-                'horario' => $created->timezone(config('app.timezone'))->format('H:i'),
+                'data' => $animal->data_ficha?->format('d/m') ?? '',
             ];
         })->all();
     }
