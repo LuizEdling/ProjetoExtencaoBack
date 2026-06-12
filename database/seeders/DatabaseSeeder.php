@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             AnimalSeeder::class,
             AdotanteSeeder::class,
             AdocaoSeeder::class,
+            LembreteSeeder::class,
         ]);
     }
 }

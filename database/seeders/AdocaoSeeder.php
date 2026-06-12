@@ -9,7 +9,7 @@ class AdocaoSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('adocoes')->insert([
+        DB::table('adocao')->insert([
             [
                 'animal_id' => 2,
                 'adotante_id' => 1,
