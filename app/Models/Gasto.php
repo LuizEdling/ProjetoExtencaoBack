@@ -8,6 +8,7 @@ class Gasto extends Model
 {
     protected $fillable = [
         'valor',
+        'doacao',
         'data',
         'descricao',
     ];
@@ -20,6 +21,7 @@ class Gasto extends Model
         return [
             'data' => 'date',
             'valor' => 'decimal:2',
+            'doacao' => 'boolean',
         ];
     }
 }
