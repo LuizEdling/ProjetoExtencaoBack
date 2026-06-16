@@ -22,11 +22,30 @@ class AnimalRepository
     /**
      * @return LengthAwarePaginator<int, Animal>
      */
-    public function paginatedOrdered(int $perPage, ?string $search = null): LengthAwarePaginator
-    {
+    public function paginatedOrdered(
+        int $perPage,
+        ?string $search = null,
+        ?int $animalStateId = null,
+        ?string $bairroResgate = null,
+        ?string $ruaResgate = null,
+    ): LengthAwarePaginator {
         $query = Animal::query()
             ->with('animalState')
             ->orderByDesc('created_at');
+
+        if ($animalStateId !== null) {
+            $query->where('animal_state_id', $animalStateId);
+        }
+
+        if ($bairroResgate !== null && $bairroResgate !== '') {
+            $escaped = addcslashes($bairroResgate, '%_\\');
+            $query->where('bairro_resgate', 'like', '%'.$escaped.'%');
+        }
+
+        if ($ruaResgate !== null && $ruaResgate !== '') {
+            $escaped = addcslashes($ruaResgate, '%_\\');
+            $query->where('rua_resgate', 'like', '%'.$escaped.'%');
+        }
 
         if ($search !== null && $search !== '') {
             $escaped = addcslashes($search, '%_\\');
@@ -35,7 +54,10 @@ class AnimalRepository
                 $q->where('nome', 'like', $term)
                     ->orWhere('raca', 'like', $term)
                     ->orWhere('especie', 'like', $term)
-                    ->orWhere('microchip', 'like', $term);
+                    ->orWhere('microchip', 'like', $term)
+                    ->orWhere('numero_protocolo', 'like', $term)
+                    ->orWhere('bairro_resgate', 'like', $term)
+                    ->orWhere('rua_resgate', 'like', $term);
             });
         }
 

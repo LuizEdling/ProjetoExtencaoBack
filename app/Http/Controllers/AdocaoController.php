@@ -166,7 +166,51 @@ class AdocaoController extends Controller
     {
         $this->authorize('delete', $adocao);
 
-        $this->adocoes->delete($adocao);
+        $esperandoAdocaoStateId = AnimalState::query()
+            ->where('nome', PainelQueryService::STATE_ESPERANDO_ADOCAO)
+            ->value('id');
+
+        if ($esperandoAdocaoStateId === null) {
+            throw ValidationException::withMessages([
+                'message' => ['Estado "Esperando adoção" não encontrado no cadastro.'],
+            ]);
+        }
+
+        $adotadoStateId = AnimalState::query()
+            ->where('nome', PainelQueryService::STATE_ADOTADO)
+            ->value('id');
+
+        DB::transaction(function () use ($adocao, $esperandoAdocaoStateId, $adotadoStateId): void {
+            $adocaoLocked = Adocao::query()
+                ->whereKey($adocao->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /** @var Animal|null $animal */
+            $animal = Animal::query()
+                ->lockForUpdate()
+                ->with('animalState')
+                ->find($adocaoLocked->animal_id);
+
+            if ($animal === null) {
+                throw ValidationException::withMessages([
+                    'animal_id' => ['Animal vinculado à adoção não foi encontrado.'],
+                ]);
+            }
+
+            if ($adotadoStateId !== null && (int) $animal->animal_state_id !== (int) $adotadoStateId) {
+                throw ValidationException::withMessages([
+                    'animal_id' => ['O animal não está com estado Adotado; não é possível desfazer esta adoção.'],
+                ]);
+            }
+
+            $adocaoLocked->delete();
+
+            $animal->update([
+                'animal_state_id' => $esperandoAdocaoStateId,
+                'animal_state_changed_at' => now(),
+            ]);
+        });
 
         return response()->noContent();
     }

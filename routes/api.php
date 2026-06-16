@@ -27,10 +27,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('relatorios/dashboard', [RelatorioController::class, 'dashboard']);
     Route::post('relatorios/export', [RelatorioController::class, 'export']);
 
+    Route::get('animals/proximo-protocolo', [AnimalController::class, 'proximoProtocolo']);
     Route::apiResource('animals', AnimalController::class)->except(['show']);
     Route::apiResource('adotantes', AdotanteController::class)->except(['show']);
     Route::post('adocoes/{adocao}/contrato', [AdocaoController::class, 'gerarContrato']);
-    Route::apiResource('adocoes', AdocaoController::class)->except(['show']);
+    Route::get('adocoes', [AdocaoController::class, 'index'])->name('adocoes.index');
+    Route::post('adocoes', [AdocaoController::class, 'store'])->name('adocoes.store');
+    Route::match(['put', 'patch'], 'adocoes/{adocao}', [AdocaoController::class, 'update'])->name('adocoes.update');
+    Route::delete('adocoes/{adocao}', [AdocaoController::class, 'destroy'])->name('adocoes.destroy');
     Route::apiResource('lembretes', LembreteController::class)->except(['show']);
     Route::apiResource('gastos', GastoController::class)->except(['show']);
 
