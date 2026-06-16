@@ -45,7 +45,7 @@ class LembreteController extends Controller
         return response()->json(new LembreteResource($lembrete->fresh()));
     }
 
-    public function destroy(Lembrete $lembrete): JsonResponse
+    public function destroy(Lembrete $lembrete)
     {
         $lembrete->delete();
 

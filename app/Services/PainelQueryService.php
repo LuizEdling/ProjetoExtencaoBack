@@ -13,6 +13,8 @@ class PainelQueryService
 
     public const STATE_EM_CIRURGIA = 'Em cirurgia';
 
+    public const STATE_ESPERANDO_ADOCAO = 'Esperando adoção';
+
     public const STATE_ADOTADO = 'Adotado';
 
     /**

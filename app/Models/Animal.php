@@ -11,6 +11,7 @@ class Animal extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'numero_protocolo',
         'nome',
         'raca',
         'microchip',
@@ -22,6 +23,8 @@ class Animal extends Model
         'cor',
         'data_entrada',
         'observacoes',
+        'bairro_resgate',
+        'rua_resgate',
         'vermifugado',
         'vacinado',
         'castrado',

@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Animal;
 use App\Models\AnimalState;
 use App\Repositories\AnimalRepository;
+use App\Services\AnimalProtocoloService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AnimalController extends Controller
 {
     public function __construct(
         protected AnimalRepository $animals,
+        protected AnimalProtocoloService $protocolo,
     ) {}
 
     /** @param array<string, mixed> $validated */
@@ -36,6 +39,31 @@ class AnimalController extends Controller
 
         $v = $validated['microchip'];
         $validated['microchip'] = ($v === null || $v === '') ? null : (string) $v;
+    }
+
+    /** @param array<string, mixed> $validated */
+    private function normalizeLocalResgate(array &$validated): void
+    {
+        foreach (['bairro_resgate', 'rua_resgate'] as $key) {
+            if (! array_key_exists($key, $validated)) {
+                continue;
+            }
+            $v = $validated[$key];
+            $validated[$key] = ($v === null || $v === '') ? null : trim((string) $v);
+        }
+    }
+
+    /** @param array<string, mixed> $validated */
+    private function normalizeNumeroProtocolo(array &$validated): void
+    {
+        if (! array_key_exists('numero_protocolo', $validated)) {
+            return;
+        }
+
+        $v = $validated['numero_protocolo'];
+        if ($v === null || $v === '') {
+            unset($validated['numero_protocolo']);
+        }
     }
 
     /**
@@ -118,19 +146,70 @@ class AnimalController extends Controller
             return response()->json($this->animals->allOrdered());
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
             'q' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'animal_state_id' => ['sometimes', 'nullable', 'integer', 'exists:animal_states,id'],
+            'bairro_resgate' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'rua_resgate' => ['sometimes', 'nullable', 'string', 'max:200'],
         ]);
 
         $perPage = min(50, max(1, (int) $request->input('per_page', 10)));
-        $q = $request->input('q');
-        $search = is_string($q) ? $q : null;
+        $q = $validated['q'] ?? null;
+        $search = is_string($q) ? trim($q) : null;
+        if ($search === '') {
+            $search = null;
+        }
+
+        $animalStateId = isset($validated['animal_state_id'])
+            ? (int) $validated['animal_state_id']
+            : null;
+
+        $bairroResgate = isset($validated['bairro_resgate']) && is_string($validated['bairro_resgate'])
+            ? trim($validated['bairro_resgate'])
+            : null;
+        if ($bairroResgate === '') {
+            $bairroResgate = null;
+        }
+
+        $ruaResgate = isset($validated['rua_resgate']) && is_string($validated['rua_resgate'])
+            ? trim($validated['rua_resgate'])
+            : null;
+        if ($ruaResgate === '') {
+            $ruaResgate = null;
+        }
 
         return response()->json(
-            $this->animals->paginatedOrdered($perPage, $search),
+            $this->animals->paginatedOrdered(
+                $perPage,
+                $search,
+                $animalStateId,
+                $bairroResgate,
+                $ruaResgate,
+            ),
         );
+    }
+
+    public function proximoProtocolo(Request $request)
+    {
+        $this->authorize('create', Animal::class);
+
+        $validated = $request->validate([
+            'data_ficha' => ['sometimes', 'date', 'date_format:Y-m-d'],
+            'ano' => ['sometimes', 'integer', 'min:1900', 'max:2100'],
+        ]);
+
+        if (isset($validated['ano'])) {
+            $numero = $this->protocolo->sugerirParaAno((int) $validated['ano']);
+        } else {
+            $dataFicha = $validated['data_ficha'] ?? now()->format('Y-m-d');
+            $numero = $this->protocolo->sugerirParaDataFicha($dataFicha);
+        }
+
+        return response()->json([
+            'numero_protocolo' => $numero,
+        ]);
     }
 
     public function store(Request $request)
@@ -138,6 +217,7 @@ class AnimalController extends Controller
         $this->authorize('create', Animal::class);
 
         $validated = $request->validate([
+            'numero_protocolo' => ['nullable', 'string', 'regex:/^\d{1,10}\/\d{4}$/', 'unique:animals,numero_protocolo'],
             'nome' => ['nullable', 'string', 'max:255'],
             'raca' => ['required', 'string', 'max:255'],
             'microchip' => ['nullable', 'string', 'max:15', 'regex:/^\d*$/'],
@@ -149,6 +229,8 @@ class AnimalController extends Controller
             'cor' => ['nullable', 'string', 'max:255'],
             'data_entrada' => ['nullable', 'date', 'date_format:Y-m-d'],
             'observacoes' => ['nullable', 'string'],
+            'bairro_resgate' => ['nullable', 'string', 'max:120'],
+            'rua_resgate' => ['nullable', 'string', 'max:200'],
             'animal_state_id' => ['sometimes', 'integer', 'exists:animal_states,id'],
             'vermifugado' => ['sometimes', 'boolean'],
             'vacinado' => ['sometimes', 'boolean'],
@@ -156,7 +238,13 @@ class AnimalController extends Controller
         ]);
 
         $this->normalizeMicrochipForCreate($validated);
+        $this->normalizeNumeroProtocolo($validated);
+        $this->normalizeLocalResgate($validated);
         $this->applyOptionalAnimalDefaultsForCreate($validated);
+
+        if (! array_key_exists('numero_protocolo', $validated)) {
+            $validated['numero_protocolo'] = $this->protocolo->sugerirParaDataFicha($validated['data_ficha']);
+        }
 
         $validated['vermifugado'] = (bool) ($validated['vermifugado'] ?? false);
         $validated['vacinado'] = (bool) ($validated['vacinado'] ?? false);
@@ -184,12 +272,20 @@ class AnimalController extends Controller
         $this->authorize('update', $animal);
 
         $fullFieldKeys = [
-            'nome', 'raca', 'microchip', 'data_ficha', 'especie', 'sexo', 'idade', 'peso', 'cor', 'data_entrada', 'observacoes',
+            'nome', 'raca', 'microchip', 'numero_protocolo', 'data_ficha', 'especie', 'sexo', 'idade', 'peso', 'cor', 'data_entrada', 'observacoes',
+            'bairro_resgate', 'rua_resgate',
         ];
         $isFullUpdate = $request->hasAny($fullFieldKeys);
 
         if ($isFullUpdate) {
             $validated = $request->validate([
+                'numero_protocolo' => [
+                    'sometimes',
+                    'nullable',
+                    'string',
+                    'regex:/^\d{1,10}\/\d{4}$/',
+                    Rule::unique('animals', 'numero_protocolo')->ignore($animal->id),
+                ],
                 'nome' => ['sometimes', 'nullable', 'string', 'max:255'],
                 'raca' => ['sometimes', 'required', 'string', 'max:255'],
                 'microchip' => ['nullable', 'string', 'max:15', 'regex:/^\d*$/'],
@@ -201,6 +297,8 @@ class AnimalController extends Controller
                 'cor' => ['sometimes', 'nullable', 'string', 'max:255'],
                 'data_entrada' => ['sometimes', 'nullable', 'date', 'date_format:Y-m-d'],
                 'observacoes' => ['sometimes', 'nullable', 'string'],
+                'bairro_resgate' => ['sometimes', 'nullable', 'string', 'max:120'],
+                'rua_resgate' => ['sometimes', 'nullable', 'string', 'max:200'],
                 'animal_state_id' => ['sometimes', 'integer', 'exists:animal_states,id'],
                 'vermifugado' => ['sometimes', 'boolean'],
                 'vacinado' => ['sometimes', 'boolean'],
@@ -208,6 +306,8 @@ class AnimalController extends Controller
             ]);
 
             $this->normalizeMicrochipForFullUpdate($validated);
+            $this->normalizeNumeroProtocolo($validated);
+            $this->normalizeLocalResgate($validated);
             $this->applyOptionalAnimalDefaultsForFullUpdate($validated, $animal);
         } else {
             $validated = $request->validate([
