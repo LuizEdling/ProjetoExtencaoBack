@@ -1,58 +1,171 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BorderCare
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API backend do **BorderCare**, sistema de gestão para clínicas veterinárias e abrigos de animais. O projeto centraliza o cadastro de animais, o fluxo clínico (estados de atendimento), adoções, adotantes, lembretes recorrentes, controle de gastos e relatórios com exportação em PDF.
 
-## About Laravel
+## Tecnologias
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [PHP](https://www.php.net/) 8.3+
+- [Laravel](https://laravel.com/) 13
+- [Laravel Sanctum](https://laravel.com/docs/sanctum) (autenticação via token)
+- [DomPDF](https://github.com/barryvdh/laravel-dompdf) (geração de contratos e relatórios)
+- SQLite (desenvolvimento) ou MySQL/PostgreSQL (produção)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Configuração do ambiente de desenvolvimento
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Pré-requisitos
 
-## Learning Laravel
+- PHP 8.3 ou superior, com extensões: `pdo`, `sqlite3` (ou driver do banco escolhido), `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`
+- [Composer](https://getcomposer.org/)
+- [Node.js](https://nodejs.org/) 18+ e npm (para assets com Vite)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Passo a passo
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. **Clone o repositório**
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+   ```bash
+   git clone https://github.com/LuizEdling/ProjetoExtencaoBack.git
+   cd ProjetoExtencaoBack
+   ```
 
-## Agentic Development
+2. **Instale as dependências e configure o ambiente**
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+   O projeto inclui um script de setup no Composer:
+
+   ```bash
+   composer setup
+   ```
+
+   Esse comando executa, em sequência: `composer install`, cria o `.env` a partir do `.env.example`, gera a `APP_KEY`, roda as migrations, instala dependências npm e compila os assets.
+
+   **Alternativa manual:**
+
+   ```bash
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   touch database/database.sqlite
+   php artisan migrate
+   npm install
+   npm run build
+   ```
+
+3. **Ajuste o arquivo `.env`**
+
+   Principais variáveis para desenvolvimento local:
+
+   ```env
+   APP_NAME=BorderCare
+   APP_URL=http://localhost:8000
+   APP_TIMEZONE=America/Sao_Paulo
+
+   DB_CONNECTION=sqlite
+   ```
+
+   Para usar MySQL ou PostgreSQL, descomente e preencha as variáveis `DB_*` correspondentes no `.env.example`.
+
+4. **Popule o banco com dados de exemplo (opcional)**
+
+   ```bash
+   php artisan db:seed
+   ```
+
+   Usuário padrão criado pelo seeder:
+
+   | Campo    | Valor              |
+   |----------|--------------------|
+   | E-mail   | `test@example.com` |
+   | Senha    | `password`         |
+
+## Como rodar o projeto localmente
+
+### Modo desenvolvimento (recomendado)
+
+Inicia o servidor PHP, fila, logs e Vite em paralelo:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Serviços disponíveis:
 
-## Contributing
+| Serviço        | URL                          |
+|----------------|------------------------------|
+| API            | http://localhost:8000        |
+| Health check   | http://localhost:8000/up     |
+| Endpoints API  | http://localhost:8000/api/*  |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Modo simples (apenas API)
 
-## Code of Conduct
+```bash
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Testes
 
-## Security Vulnerabilities
+```bash
+composer test
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+ou:
 
-## License
+```bash
+php artisan test
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Integração com o frontend
+
+A API expõe rotas em `/api`. O CORS está configurado para o frontend em `http://localhost:5173` (Vite). Ao usar outra origem em produção, atualize `config/cors.php`.
+
+Autenticação: `POST /api/login` retorna um token Sanctum; envie-o no header `Authorization: Bearer {token}` nas demais requisições.
+
+## Principais funcionalidades da API
+
+- Autenticação (`login` / `logout`)
+- Cadastro e gestão de animais (protocolo, estados clínicos, microchip, local de resgate)
+- Adotantes e adoções (com geração de contrato em PDF)
+- Painel operacional com resumos e fila de atendimento
+- Lembretes com recorrência configurável
+- Gastos e doações
+- Relatórios com dashboard e exportação em PDF
+
+## Deploy
+
+Este repositório contém apenas o backend. Para publicar em produção:
+
+1. Configure o servidor com PHP 8.3+, Composer e um banco de dados (MySQL/PostgreSQL recomendados).
+2. Defina variáveis de ambiente de produção:
+
+   ```env
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://seu-dominio.com
+   ```
+
+3. Instale dependências e otimize a aplicação:
+
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   php artisan migrate --force
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+
+4. Aponte o document root do servidor web (Nginx/Apache) para a pasta `public/`.
+5. Configure permissões de escrita em `storage/` e `bootstrap/cache/`.
+6. Adicione a URL do frontend em `config/cors.php` nas origens permitidas.
+
+Para hospedagem gerenciada (Laravel Forge, Railway, Render etc.), siga a documentação do provedor adaptando os comandos acima.
+
+## Licença
+
+Este projeto está licenciado sob a [MIT License](https://opensource.org/licenses/MIT).
+
+## Créditos
+
+Projeto desenvolvido pela equipe:
+
+- Luiz Henrique Ribas Edling
+- Danton Bernardo Oliveira de Souza
+- Felipe Gorgo Kiçula
+- Rubens Santana
